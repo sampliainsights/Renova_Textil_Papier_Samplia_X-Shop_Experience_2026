@@ -2777,13 +2777,13 @@
     [hidden] { display: none !important; }
     .scale-leg:empty, .card .sub:empty { display: none; }
 
-    /* Tres KPI: una fila de tres hasta móvil. */
-    .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    /* Cuatro KPI en escritorio, dos por fila en tablet y uno en móvil. */
+    .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     @media (max-width: 1560px) { .kpi:nth-child(-n+4) { border-bottom: 0; } }
     @media (max-width: 980px) {
-      .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .kpi:nth-child(n) { border-bottom: 0; border-right: 1px solid var(--line); }
-      .kpi:last-child { border-right: 0; }
+      .kpi:nth-child(2n) { border-right: 0; }
     }
     @media (max-width: 720px) {
       .kpis { grid-template-columns: minmax(0, 1fr); }
@@ -3423,10 +3423,10 @@
         id: 'conoce', col: 'uAd1lkUg1Fi8QHk7YtSY', kind: 'cat',
         t: 'Antes de asistir a esta pop-up, ¿conocías la gama de papel higiénico, pañuelos y toallitas Renova?',
         order: [
-          { l: 'No los conocía', re: /^no los? conoc/, c: C.s2 },
-          { l: 'Los conocía, pero no los había probado', re: /no los? habia probado/, c: C.pink },
-          { l: 'Los había comprado alguna vez', re: /comprado alguna vez/, c: C.rasp },
-          { l: 'Compradora/o habitual', re: /habitual/, c: C.brick }
+          { l: 'No los conocía', re: /^no los? conoc/, c: C.rasp },
+          { l: 'Los conocía, pero no los había probado', re: /no los? habia probado/, c: '#6F91D2' },
+          { l: 'Los había comprado alguna vez', re: /comprado alguna vez/, c: C.dusk },
+          { l: 'Compradora/o habitual', re: /habitual/, c: '#1E3A8A' }
         ]
       },
       concepto: {
@@ -4561,11 +4561,17 @@ x6,NA,30,,No los conocía.,,,,,,,,`;
       const up = d >= 0;
       return `<div class="kpi-bm"><span class="minipill ${flat ? '' : up ? 'up' : 'down'}">${flat ? '=' : up ? '▲' : '▼'} <b>${flat ? '0,0' : (up ? '+' : '−') + df(Math.abs(d), 1)}%</b> vs ${ACTS[VIEW.o].name} ${refTxt}</span></div>`;
     }
+    function npsBenchmarkPill(idx) {
+      const diff = Math.round(idx) - 22;
+      const flat = diff === 0;
+      return `<div class="kpi-bm"><span class="minipill ${flat ? '' : diff > 0 ? 'up' : 'down'}">${flat ? '=' : diff > 0 ? '▲' : '▼'} <b>${flat ? '0' : signed(diff, 0)} pts</b> vs Benchmark (+22)</span></div>`;
+    }
     function renderKPIs() {
       const ready = LOAD === 'live';
       const A = ACTS[VIEW.a], O = ACTS[VIEW.o];
       const gm = scaleDist(VIEW.m, Q.general), gc = scaleDist(VIEW.c, Q.general);
       const im = shareOf(VIEW.m, Q.intencion, KPI_INTENCION), ic = shareOf(VIEW.c, Q.intencion, KPI_INTENCION);
+      const nps = npsOf(VIEW.m, Q.reco);
       const kpi = (v, u, l, note, extra) => `<div class="kpi">
         <div class="kpi-v">${v}${u ? `<span class="kpi-u">${u}</span>` : ''}</div>
         <div class="kpi-l">${l}</div>`
@@ -4582,7 +4588,10 @@ x6,NA,30,,No los conocía.,,,,,,,,`;
           gm.n && enoughBoth(gm.n, gc.n) ? benchPill(gm.mean, gc.mean, '(' + df(gc.mean, 2) + ')') : '') +
         kpi(im.base ? pf(im.pct, 0) : '—', '', 'Comprarían',
           im.base ? nf(im.hit) + ' compradores potenciales de ' + nf(im.base) : '',
-          im.base && enoughBoth(im.base, ic.base) ? benchPill(im.pct, ic.pct, '(' + pf(ic.pct, 0) + ')') : '');
+          im.base && enoughBoth(im.base, ic.base) ? benchPill(im.pct, ic.pct, '(' + pf(ic.pct, 0) + ')') : '') +
+        kpi(ready && nps.st.n ? (nps.idx >= 0 ? '+' : '−') + df(Math.abs(nps.idx), 0) : '—', '', 'NPS',
+          ready && nps.st.n ? 'índice de recomendación · ' + nf(nps.st.n) + ' valoraciones' : '',
+          ready && nps.st.n ? npsBenchmarkPill(nps.idx) : '');
 
       /* Cierre: compradores potenciales únicos de las dos activaciones, sin filtros. */
       const ctaN = $('#cta-n');
